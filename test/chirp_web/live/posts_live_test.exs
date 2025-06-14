@@ -72,7 +72,7 @@ defmodule ChirpWeb.PostsLiveTest do
     test "deletes posts in listing", %{conn: conn, posts: posts} do
       {:ok, index_live, _html} = live(conn, ~p"/posts")
 
-      assert index_live |> element("#posts-#{posts.id} a", "Delete") |> render_click()
+      assert index_live |> element("# a", "Delete") |> render_click()
       refute has_element?(index_live, "#posts-#{posts.id}")
     end
   end
