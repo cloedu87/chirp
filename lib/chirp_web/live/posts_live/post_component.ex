@@ -36,6 +36,7 @@ defmodule ChirpWeb.PostsLive.PostComponent do
               </.link>
               <.link
                 phx-click={JS.push("delete", value: %{id: @post.id}) |> hide("##{@id}")}
+                id={"delete-#{@post.id}"}
                 data-confirm="Are you sure?"
                 class="hover:text-red-500"
               >

@@ -4,9 +4,9 @@ defmodule ChirpWeb.PostsLiveTest do
   import Phoenix.LiveViewTest
   import Chirp.TimelineFixtures
 
-  @create_attrs %{body: "some body", username: "some username", likes_count: 42, resposts_count: 42}
-  @update_attrs %{body: "some updated body", username: "some updated username", likes_count: 43, resposts_count: 43}
-  @invalid_attrs %{body: nil, username: nil, likes_count: nil, resposts_count: nil}
+  @create_attrs %{body: "some body"}
+  @update_attrs %{body: "some updated body"}
+  @invalid_attrs %{body: nil}
 
   defp create_posts(_) do
     posts = posts_fixture()
@@ -19,7 +19,7 @@ defmodule ChirpWeb.PostsLiveTest do
     test "lists all posts", %{conn: conn, posts: posts} do
       {:ok, _index_live, html} = live(conn, ~p"/posts")
 
-      assert html =~ "Listing Posts"
+      assert html =~ "Timeline"
       assert html =~ posts.body
     end
 
@@ -49,7 +49,8 @@ defmodule ChirpWeb.PostsLiveTest do
     test "updates posts in listing", %{conn: conn, posts: posts} do
       {:ok, index_live, _html} = live(conn, ~p"/posts")
 
-      assert index_live |> element("#posts-#{posts.id} a", "Edit") |> render_click() =~
+      # Click the edit icon (SVG) in the post component
+      assert index_live |> element("#posts_collection-#{posts.id} a[href*='edit']") |> render_click() =~
                "Edit Posts"
 
       assert_patch(index_live, ~p"/posts/#{posts}/edit")
@@ -72,8 +73,35 @@ defmodule ChirpWeb.PostsLiveTest do
     test "deletes posts in listing", %{conn: conn, posts: posts} do
       {:ok, index_live, _html} = live(conn, ~p"/posts")
 
-      assert index_live |> element("# a", "Delete") |> render_click()
-      refute has_element?(index_live, "#posts-#{posts.id}")
+      # Click the delete link directly (no nested anchor)
+      assert index_live |> element("#delete-#{posts.id}") |> render_click()
+
+      # The post should be removed from the DOM
+      refute has_element?(index_live, "#posts_collection-#{posts.id}")
+    end
+
+    test "likes a post", %{conn: conn, posts: posts} do
+      {:ok, index_live, _html} = live(conn, ~p"/posts")
+
+      # Click the like button
+      index_live
+      |> element("#posts_collection-#{posts.id} a[phx-click*='like']")
+      |> render_click()
+
+      # The post should still be visible
+      assert has_element?(index_live, "#posts_collection-#{posts.id}")
+    end
+
+    test "reposts a post", %{conn: conn, posts: posts} do
+      {:ok, index_live, _html} = live(conn, ~p"/posts")
+
+      # Click the repost button
+      index_live
+      |> element("#posts_collection-#{posts.id} a[phx-click*='respost']")
+      |> render_click()
+
+      # The post should still be visible
+      assert has_element?(index_live, "#posts_collection-#{posts.id}")
     end
   end
 
@@ -83,14 +111,14 @@ defmodule ChirpWeb.PostsLiveTest do
     test "displays posts", %{conn: conn, posts: posts} do
       {:ok, _show_live, html} = live(conn, ~p"/posts/#{posts}")
 
-      assert html =~ "Show Posts"
+      assert html =~ "Posts #{posts.id}"
       assert html =~ posts.body
     end
 
     test "updates posts within modal", %{conn: conn, posts: posts} do
       {:ok, show_live, _html} = live(conn, ~p"/posts/#{posts}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit posts") |> render_click() =~
                "Edit Posts"
 
       assert_patch(show_live, ~p"/posts/#{posts}/show/edit")
