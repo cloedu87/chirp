@@ -17,7 +17,7 @@ defmodule ChirpWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import ChirpWeb.Gettext
+  use Gettext, backend: ChirpWeb.Gettext
 
   @doc """
   Renders a modal.

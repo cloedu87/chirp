@@ -43,7 +43,7 @@ defmodule ChirpWeb do
         layouts: [html: ChirpWeb.Layouts]
 
       import Plug.Conn
-      import ChirpWeb.Gettext
+      use Gettext, backend: ChirpWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule ChirpWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import ChirpWeb.CoreComponents
-      import ChirpWeb.Gettext
+      use Gettext, backend: ChirpWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
