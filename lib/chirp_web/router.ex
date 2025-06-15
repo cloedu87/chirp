@@ -21,13 +21,6 @@ defmodule ChirpWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-
-    live "/posts", PostsLive.Index, :index
-    live "/posts/new", PostsLive.Index, :new
-    live "/posts/:id/edit", PostsLive.Index, :edit
-
-    live "/posts/:id", PostsLive.Show, :show
-    live "/posts/:id/show/edit", PostsLive.Show, :edit
   end
 
   # Other scopes may use custom stacks.
@@ -68,14 +61,7 @@ defmodule ChirpWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
-  ## OAuth routes
 
-  scope "/auth", ChirpWeb.Auth do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
-
-    get "/:provider", OAuthController, :request
-    get "/:provider/callback", OAuthController, :callback
-  end
 
   scope "/", ChirpWeb do
     pipe_through [:browser, :require_authenticated_user]
@@ -84,6 +70,13 @@ defmodule ChirpWeb.Router do
       on_mount: [{ChirpWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      live "/posts", PostsLive.Index, :index
+      live "/posts/new", PostsLive.Index, :new
+      live "/posts/:id/edit", PostsLive.Index, :edit
+
+      live "/posts/:id", PostsLive.Show, :show
+      live "/posts/:id/show/edit", PostsLive.Show, :edit
     end
   end
 

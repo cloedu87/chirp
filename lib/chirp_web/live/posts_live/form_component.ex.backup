@@ -51,9 +51,7 @@ defmodule ChirpWeb.PostsLive.FormComponent do
   defp save_posts(socket, :edit, posts_params) do
     case Timeline.update_posts(socket.assigns.posts, posts_params) do
       {:ok, posts} ->
-        # Preload user before notifying parent
-        posts_with_user = Chirp.Repo.preload(posts, [:user])
-        notify_parent({:saved, posts_with_user})
+        notify_parent({:saved, posts})
 
         {:noreply,
          socket
@@ -71,9 +69,7 @@ defmodule ChirpWeb.PostsLive.FormComponent do
 
     case Timeline.create_posts(posts_params) do
       {:ok, posts} ->
-        # Preload user before notifying parent
-        posts_with_user = Chirp.Repo.preload(posts, [:user])
-        notify_parent({:saved, posts_with_user})
+        notify_parent({:saved, posts})
 
         {:noreply,
          socket

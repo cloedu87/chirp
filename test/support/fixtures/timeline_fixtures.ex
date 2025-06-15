@@ -4,20 +4,25 @@ defmodule Chirp.TimelineFixtures do
   entities via the `Chirp.Timeline` context.
   """
 
+  import Chirp.AccountsFixtures
+
   @doc """
   Generate a posts.
   """
   def posts_fixture(attrs \\ %{}) do
+    user = user_fixture()
+
     {:ok, posts} =
       attrs
       |> Enum.into(%{
         body: "some body",
         likes_count: 42,
         resposts_count: 42,
-        username: "some username"
+        user_id: user.id
       })
       |> Chirp.Timeline.create_posts()
 
-    posts
+    # Preload the user association to match how Timeline.list_posts/0 works
+    Chirp.Repo.preload(posts, [:user])
   end
 end

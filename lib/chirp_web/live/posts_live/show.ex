@@ -3,6 +3,9 @@ defmodule ChirpWeb.PostsLive.Show do
 
   alias Chirp.Timeline
 
+  # Add authentication requirement
+  on_mount {ChirpWeb.UserAuth, :ensure_authenticated}
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}

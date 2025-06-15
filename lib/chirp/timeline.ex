@@ -18,7 +18,11 @@ defmodule Chirp.Timeline do
 
   """
   def list_posts do
-    Repo.all(from p in Posts, order_by: [desc: p.id])
+    Repo.all(
+      from p in Posts,
+      order_by: [desc: p.id],
+      preload: [:user]
+    )
   end
 
   @doc """
@@ -35,7 +39,9 @@ defmodule Chirp.Timeline do
       ** (Ecto.NoResultsError)
 
   """
-  def get_posts!(id), do: Repo.get!(Posts, id)
+  def get_posts!(id) do
+    Repo.get!(Posts, id) |> Repo.preload([:user])
+  end
 
   @doc """
   Creates a posts.
@@ -112,7 +118,9 @@ defmodule Chirp.Timeline do
   def broadcast({:error, _reason} = error, _event), do: error
 
   def broadcast({:ok, post}, event) do
-    Phoenix.PubSub.broadcast(Chirp.PubSub, "posts", {event, post})
+    # Preload user association before broadcasting
+    post_with_user = Repo.preload(post, [:user])
+    Phoenix.PubSub.broadcast(Chirp.PubSub, "posts", {event, post_with_user})
     {:ok, post}
   end
 

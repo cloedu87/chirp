@@ -38,8 +38,6 @@ defmodule ChirpWeb.UserRegistrationLive do
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
         </:actions>
       </.simple_form>
-
-      <.oauth_buttons />
     </div>
     """
   end

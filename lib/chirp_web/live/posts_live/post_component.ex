@@ -6,15 +6,21 @@ defmodule ChirpWeb.PostsLive.PostComponent do
     ~H"""
     <div id={@id} class="bg-white p-4 rounded-lg shadow hover:bg-gray-50 transition">
       <div class="flex items-start space-x-3">
-        <!-- Avatar placeholder -->
-        <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0"></div>
+        <!-- Avatar -->
+        <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center">
+          <span class="text-gray-600 font-semibold">
+            <%= String.first(@post.user.email) |> String.upcase() %>
+          </span>
+        </div>
 
         <div class="flex-1">
           <!-- Header -->
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-gray-900"><%= @post.username %></span>
-              <span class="text-gray-500">@<%= @post.username %></span>
+              <span class="font-bold text-gray-900"><%= @post.user.email %></span>
+              <span class="text-gray-500 text-sm">
+                <%= Calendar.strftime(@post.inserted_at, "%B %d, %Y at %I:%M %p") %>
+              </span>
             </div>
             <!-- Actions dropdown or buttons -->
             <div class="flex items-center space-x-2 text-gray-500">

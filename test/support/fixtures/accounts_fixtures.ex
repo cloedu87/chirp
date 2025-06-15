@@ -29,22 +29,5 @@ defmodule Chirp.AccountsFixtures do
     token
   end
 
-  def valid_oauth_user_attributes(attrs \\ %{}) do
-    Enum.into(attrs, %{
-      email: unique_user_email(),
-      provider: "google",
-      provider_id: "#{System.unique_integer()}",
-      name: "Test User",
-      avatar_url: "https://example.com/avatar.jpg"
-    })
-  end
 
-  def oauth_user_fixture(attrs \\ %{}) do
-    {:ok, user} =
-      attrs
-      |> valid_oauth_user_attributes()
-      |> Chirp.Accounts.register_oauth_user()
-
-    user
-  end
 end

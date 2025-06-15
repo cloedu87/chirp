@@ -31,8 +31,6 @@ defmodule ChirpWeb.UserLoginLive do
           </.button>
         </:actions>
       </.simple_form>
-
-      <.oauth_buttons />
     </div>
     """
   end

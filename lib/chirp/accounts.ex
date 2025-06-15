@@ -27,22 +27,6 @@ defmodule Chirp.Accounts do
   end
 
   @doc """
-  Gets a user by provider and provider_id.
-
-  ## Examples
-
-      iex> get_user_by_provider("google", "123456")
-      %User{}
-
-      iex> get_user_by_provider("github", "unknown")
-      nil
-
-  """
-  def get_user_by_provider(provider, provider_id) when is_binary(provider) and is_binary(provider_id) do
-    Repo.get_by(User, provider: provider, provider_id: provider_id)
-  end
-
-  @doc """
   Gets a user by email and password.
 
   ## Examples
@@ -94,74 +78,6 @@ defmodule Chirp.Accounts do
     %User{}
     |> User.registration_changeset(attrs)
     |> Repo.insert()
-  end
-
-  @doc """
-  Registers a user via OAuth.
-
-  ## Examples
-
-      iex> register_oauth_user(%{email: "user@example.com", provider: "google", provider_id: "123"})
-      {:ok, %User{}}
-
-      iex> register_oauth_user(%{email: "invalid"})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def register_oauth_user(attrs) do
-    %User{}
-    |> User.oauth_registration_changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Finds or creates a user from OAuth data.
-
-  First tries to find an existing user by provider and provider_id.
-  If not found, tries to find by email and link the OAuth account.
-  If still not found, creates a new user.
-
-  ## Examples
-
-      iex> find_or_create_oauth_user(%{email: "user@example.com", provider: "google", provider_id: "123"})
-      {:ok, %User{}}
-
-  """
-  def find_or_create_oauth_user(attrs) do
-    provider = Map.get(attrs, :provider) || Map.get(attrs, "provider")
-    provider_id = Map.get(attrs, :provider_id) || Map.get(attrs, "provider_id")
-    email = Map.get(attrs, :email) || Map.get(attrs, "email")
-
-    case get_user_by_provider(provider, provider_id) do
-      %User{} = user ->
-        {:ok, user}
-
-      nil ->
-        case get_user_by_email(email) do
-          %User{} = user ->
-            # Link OAuth account to existing user
-            link_oauth_account(user, attrs)
-
-          nil ->
-            # Create new OAuth user
-            register_oauth_user(attrs)
-        end
-    end
-  end
-
-  @doc """
-  Links an OAuth account to an existing user.
-
-  ## Examples
-
-      iex> link_oauth_account(user, %{provider: "google", provider_id: "123"})
-      {:ok, %User{}}
-
-  """
-  def link_oauth_account(user, attrs) do
-    user
-    |> User.oauth_link_changeset(attrs)
-    |> Repo.update()
   end
 
   @doc """

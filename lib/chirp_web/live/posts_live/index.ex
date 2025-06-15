@@ -4,6 +4,9 @@ defmodule ChirpWeb.PostsLive.Index do
   alias Chirp.Timeline
   alias Chirp.Timeline.Posts
 
+  # Add authentication requirement
+  on_mount {ChirpWeb.UserAuth, :ensure_authenticated}
+
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket), do: Timeline.subscribe()

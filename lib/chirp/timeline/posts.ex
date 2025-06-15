@@ -4,9 +4,10 @@ defmodule Chirp.Timeline.Posts do
 
   schema "posts" do
     field :body, :string
-    field :username, :string, default: "anonymous"
     field :likes_count, :integer, default: 0
     field :resposts_count, :integer, default: 0
+
+    belongs_to :user, Chirp.Accounts.User
 
     timestamps(type: :utc_datetime)
   end
@@ -14,8 +15,9 @@ defmodule Chirp.Timeline.Posts do
   @doc false
   def changeset(posts, attrs) do
     posts
-    |> cast(attrs, [:username, :body, :likes_count, :resposts_count])
-    |> validate_required([:username, :body])
+    |> cast(attrs, [:body, :likes_count, :resposts_count, :user_id])
+    |> validate_required([:body, :user_id])
     |> validate_length(:body, min: 1, max: 250)
+    |> foreign_key_constraint(:user_id)
   end
 end

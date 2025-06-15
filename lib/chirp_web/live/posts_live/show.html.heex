@@ -9,7 +9,7 @@
 </.header>
 
 <.list>
-  <:item title="Username"><%= @posts.username %></:item>
+  <:item title="Author"><%= @posts.user.email %></:item>
   <:item title="Body"><%= @posts.body %></:item>
   <:item title="Likes count"><%= @posts.likes_count %></:item>
   <:item title="Resposts count"><%= @posts.resposts_count %></:item>
@@ -24,6 +24,7 @@
     title={@page_title}
     action={@live_action}
     posts={@posts}
+    current_user={@current_user}
     patch={~p"/posts/#{@posts}"}
   />
 </.modal>

@@ -14,7 +14,7 @@ defmodule ChirpWeb.PostsLiveTest do
   end
 
   describe "Index" do
-    setup [:create_posts]
+    setup [:create_posts, :register_and_log_in_user]
 
     test "lists all posts", %{conn: conn, posts: posts} do
       {:ok, _index_live, html} = live(conn, ~p"/posts")
@@ -106,7 +106,7 @@ defmodule ChirpWeb.PostsLiveTest do
   end
 
   describe "Show" do
-    setup [:create_posts]
+    setup [:create_posts, :register_and_log_in_user]
 
     test "displays posts", %{conn: conn, posts: posts} do
       {:ok, _show_live, html} = live(conn, ~p"/posts/#{posts}")

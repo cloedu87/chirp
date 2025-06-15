@@ -7,8 +7,9 @@ defmodule Chirp.TimelineTest do
     alias Chirp.Timeline.Posts
 
     import Chirp.TimelineFixtures
+    import Chirp.AccountsFixtures
 
-    @invalid_attrs %{body: nil, username: nil, likes_count: nil, resposts_count: nil}
+    @invalid_attrs %{body: nil, user_id: nil, likes_count: nil, resposts_count: nil}
 
     test "list_posts/0 returns all posts" do
       posts = posts_fixture()
@@ -21,11 +22,12 @@ defmodule Chirp.TimelineTest do
     end
 
     test "create_posts/1 with valid data creates a posts" do
-      valid_attrs = %{body: "some body", username: "some username", likes_count: 42, resposts_count: 42}
+      user = user_fixture()
+      valid_attrs = %{body: "some body", user_id: user.id, likes_count: 42, resposts_count: 42}
 
       assert {:ok, %Posts{} = posts} = Timeline.create_posts(valid_attrs)
       assert posts.body == "some body"
-      assert posts.username == "some username"
+      assert posts.user_id == user.id
       assert posts.likes_count == 42
       assert posts.resposts_count == 42
     end
@@ -36,11 +38,12 @@ defmodule Chirp.TimelineTest do
 
     test "update_posts/2 with valid data updates the posts" do
       posts = posts_fixture()
-      update_attrs = %{body: "some updated body", username: "some updated username", likes_count: 43, resposts_count: 43}
+      user = user_fixture()
+      update_attrs = %{body: "some updated body", user_id: user.id, likes_count: 43, resposts_count: 43}
 
       assert {:ok, %Posts{} = posts} = Timeline.update_posts(posts, update_attrs)
       assert posts.body == "some updated body"
-      assert posts.username == "some updated username"
+      assert posts.user_id == user.id
       assert posts.likes_count == 43
       assert posts.resposts_count == 43
     end
