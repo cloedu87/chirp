@@ -20,7 +20,7 @@ defmodule Chirp.Timeline do
   def list_posts do
     Repo.all(
       from p in Posts,
-        order_by: [desc: p.id],
+        order_by: [asc: p.inserted_at],
         preload: [:user]
     )
   end
