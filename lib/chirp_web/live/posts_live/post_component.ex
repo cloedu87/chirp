@@ -9,7 +9,7 @@ defmodule ChirpWeb.PostsLive.PostComponent do
         <!-- Avatar -->
         <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center">
           <span class="text-gray-600 font-semibold">
-            {String.first(@post.user.email) |> String.upcase()}
+            {String.first(@post.user.username) |> String.upcase()}
           </span>
         </div>
 
