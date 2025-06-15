@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for chirp-restless-hill-331 on 2025-06-15T16:42:29+02:00
+# fly.toml app configuration file generated for chirp-empty-forest-7702 on 2025-06-15T16:49:57+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'chirp-restless-hill-331'
+app = 'chirp-empty-forest-7702'
 primary_region = 'fra'
 kill_signal = 'SIGTERM'
 
@@ -13,11 +13,11 @@ kill_signal = 'SIGTERM'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'chirp-restless-hill-331.fly.dev'
+  PHX_HOST = 'chirp-empty-forest-7702.fly.dev'
   PORT = '8080'
 
 [http_service]
-  internal_port = 4000
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
