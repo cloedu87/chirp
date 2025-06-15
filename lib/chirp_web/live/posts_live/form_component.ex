@@ -8,7 +8,7 @@ defmodule ChirpWeb.PostsLive.FormComponent do
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        {@title}
         <:subtitle>Use this form to publish your chirp.</:subtitle>
       </.header>
 
@@ -49,7 +49,11 @@ defmodule ChirpWeb.PostsLive.FormComponent do
   end
 
   defp save_posts(socket, :edit, posts_params) do
-    case Timeline.update_posts(socket.assigns.posts, posts_params) do
+    case Timeline.update_user_post(
+           socket.assigns.current_user,
+           socket.assigns.posts,
+           posts_params
+         ) do
       {:ok, posts} ->
         # Preload user before notifying parent
         posts_with_user = Chirp.Repo.preload(posts, [:user])
@@ -62,6 +66,12 @@ defmodule ChirpWeb.PostsLive.FormComponent do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
+
+      {:error, :unauthorized} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "You can only edit your own posts.")
+         |> push_patch(to: socket.assigns.patch)}
     end
   end
 

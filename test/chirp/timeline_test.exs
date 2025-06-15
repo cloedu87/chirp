@@ -39,7 +39,13 @@ defmodule Chirp.TimelineTest do
     test "update_posts/2 with valid data updates the posts" do
       posts = posts_fixture()
       user = user_fixture()
-      update_attrs = %{body: "some updated body", user_id: user.id, likes_count: 43, resposts_count: 43}
+
+      update_attrs = %{
+        body: "some updated body",
+        user_id: user.id,
+        likes_count: 43,
+        resposts_count: 43
+      }
 
       assert {:ok, %Posts{} = posts} = Timeline.update_posts(posts, update_attrs)
       assert posts.body == "some updated body"
@@ -63,6 +69,65 @@ defmodule Chirp.TimelineTest do
     test "change_posts/1 returns a posts changeset" do
       posts = posts_fixture()
       assert %Ecto.Changeset{} = Timeline.change_posts(posts)
+    end
+
+    test "user_owns_post?/2 returns true when user owns the post" do
+      posts = posts_fixture()
+      assert Timeline.user_owns_post?(posts.user, posts) == true
+    end
+
+    test "user_owns_post?/2 returns false when user doesn't own the post" do
+      posts = posts_fixture()
+      other_user = user_fixture(email: "other@example.com")
+      assert Timeline.user_owns_post?(other_user, posts) == false
+    end
+
+    test "get_user_post!/2 returns the post when user owns it" do
+      posts = posts_fixture()
+      assert Timeline.get_user_post!(posts.user, posts.id) == posts
+    end
+
+    test "get_user_post!/2 raises error when user doesn't own the post" do
+      posts = posts_fixture()
+      other_user = user_fixture(email: "other@example.com")
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Timeline.get_user_post!(other_user, posts.id)
+      end
+    end
+
+    test "update_user_post/3 updates the post when user owns it" do
+      posts = posts_fixture()
+      update_attrs = %{body: "updated by owner"}
+
+      assert {:ok, %Posts{} = updated_posts} =
+               Timeline.update_user_post(posts.user, posts, update_attrs)
+
+      assert updated_posts.body == "updated by owner"
+    end
+
+    test "update_user_post/3 returns unauthorized error when user doesn't own the post" do
+      posts = posts_fixture()
+      other_user = user_fixture(email: "other@example.com")
+      update_attrs = %{body: "attempted update"}
+
+      assert Timeline.update_user_post(other_user, posts, update_attrs) == {:error, :unauthorized}
+    end
+
+    test "delete_user_post/2 deletes the post when user owns it" do
+      posts = posts_fixture()
+
+      assert {:ok, %Posts{}} = Timeline.delete_user_post(posts.user, posts)
+      assert_raise Ecto.NoResultsError, fn -> Timeline.get_posts!(posts.id) end
+    end
+
+    test "delete_user_post/2 returns unauthorized error when user doesn't own the post" do
+      posts = posts_fixture()
+      other_user = user_fixture(email: "other@example.com")
+
+      assert Timeline.delete_user_post(other_user, posts) == {:error, :unauthorized}
+      # Post should still exist
+      assert Timeline.get_posts!(posts.id) == posts
     end
   end
 end

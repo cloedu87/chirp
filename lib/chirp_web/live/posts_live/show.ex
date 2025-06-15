@@ -13,10 +13,16 @@ defmodule ChirpWeb.PostsLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    posts =
+      case socket.assigns.live_action do
+        :edit -> Timeline.get_user_post!(socket.assigns.current_user, id)
+        _ -> Timeline.get_posts!(id)
+      end
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:posts, Timeline.get_posts!(id))}
+     |> assign(:posts, posts)}
   end
 
   defp page_title(:show), do: "Show Posts"

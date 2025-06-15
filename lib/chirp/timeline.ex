@@ -20,8 +20,8 @@ defmodule Chirp.Timeline do
   def list_posts do
     Repo.all(
       from p in Posts,
-      order_by: [desc: p.id],
-      preload: [:user]
+        order_by: [desc: p.id],
+        preload: [:user]
     )
   end
 
@@ -132,5 +132,83 @@ defmodule Chirp.Timeline do
   def increment_resposts_count(%Posts{} = posts) do
     posts
     |> update_posts(%{resposts_count: posts.resposts_count + 1})
+  end
+
+  @doc """
+  Checks if a user owns a specific post.
+
+  ## Examples
+
+      iex> user_owns_post?(user, post)
+      true
+
+      iex> user_owns_post?(other_user, post)
+      false
+
+  """
+  def user_owns_post?(%Chirp.Accounts.User{id: user_id}, %Posts{user_id: post_user_id}) do
+    user_id == post_user_id
+  end
+
+  @doc """
+  Gets a post if the user owns it, otherwise returns an error.
+
+  ## Examples
+
+      iex> get_user_post!(user, post_id)
+      %Posts{}
+
+      iex> get_user_post!(other_user, post_id)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_user_post!(%Chirp.Accounts.User{} = user, id) do
+    post = get_posts!(id)
+
+    if user_owns_post?(user, post) do
+      post
+    else
+      raise Ecto.NoResultsError, queryable: Posts
+    end
+  end
+
+  @doc """
+  Updates a post if the user owns it.
+
+  ## Examples
+
+      iex> update_user_post(user, post, %{body: "new content"})
+      {:ok, %Posts{}}
+
+      iex> update_user_post(other_user, post, %{body: "new content"})
+      {:error, :unauthorized}
+
+  """
+  def update_user_post(%Chirp.Accounts.User{} = user, %Posts{} = post, attrs) do
+    if user_owns_post?(user, post) do
+      update_posts(post, attrs)
+    else
+      {:error, :unauthorized}
+    end
+  end
+
+  @doc """
+  Deletes a post if the user owns it.
+
+  ## Examples
+
+      iex> delete_user_post(user, post)
+      {:ok, %Posts{}}
+
+      iex> delete_user_post(other_user, post)
+      {:error, :unauthorized}
+
+  """
+  def delete_user_post(%Chirp.Accounts.User{} = user, %Posts{} = post) do
+    if user_owns_post?(user, post) do
+      delete_posts(post)
+    else
+      {:error, :unauthorized}
+    end
   end
 end

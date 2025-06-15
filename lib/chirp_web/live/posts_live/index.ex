@@ -19,9 +19,11 @@ defmodule ChirpWeb.PostsLive.Index do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
+    posts = Timeline.get_user_post!(socket.assigns.current_user, id)
+
     socket
     |> assign(:page_title, "Edit Posts")
-    |> assign(:posts, Timeline.get_posts!(id))
+    |> assign(:posts, posts)
   end
 
   defp apply_action(socket, :new, _params) do
@@ -59,8 +61,14 @@ defmodule ChirpWeb.PostsLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     posts = Timeline.get_posts!(id)
-    {:ok, _} = Timeline.delete_posts(posts)
-    {:noreply, stream_delete(socket, :posts_collection, posts)}
+
+    case Timeline.delete_user_post(socket.assigns.current_user, posts) do
+      {:ok, _} ->
+        {:noreply, stream_delete(socket, :posts_collection, posts)}
+
+      {:error, :unauthorized} ->
+        {:noreply, put_flash(socket, :error, "You can only delete your own posts.")}
+    end
   end
 
   @impl true

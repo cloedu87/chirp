@@ -8,13 +8,18 @@ defmodule ChirpWeb.PostsLiveTest do
   @update_attrs %{body: "some updated body"}
   @invalid_attrs %{body: nil}
 
+  defp create_posts(%{user: user}) do
+    posts = posts_fixture(%{user_id: user.id})
+    %{posts: posts}
+  end
+
   defp create_posts(_) do
     posts = posts_fixture()
     %{posts: posts}
   end
 
   describe "Index" do
-    setup [:create_posts, :register_and_log_in_user]
+    setup [:register_and_log_in_user, :create_posts]
 
     test "lists all posts", %{conn: conn, posts: posts} do
       {:ok, _index_live, html} = live(conn, ~p"/posts")
@@ -50,7 +55,9 @@ defmodule ChirpWeb.PostsLiveTest do
       {:ok, index_live, _html} = live(conn, ~p"/posts")
 
       # Click the edit icon (SVG) in the post component
-      assert index_live |> element("#posts_collection-#{posts.id} a[href*='edit']") |> render_click() =~
+      assert index_live
+             |> element("#posts_collection-#{posts.id} a[href*='edit']")
+             |> render_click() =~
                "Edit Posts"
 
       assert_patch(index_live, ~p"/posts/#{posts}/edit")
@@ -80,6 +87,42 @@ defmodule ChirpWeb.PostsLiveTest do
       refute has_element?(index_live, "#posts_collection-#{posts.id}")
     end
 
+    test "cannot edit another user's post", %{conn: conn} do
+      # Create a post by another user
+      other_user = Chirp.AccountsFixtures.user_fixture(email: "other@example.com")
+      other_posts = posts_fixture(%{user_id: other_user.id})
+
+      {:ok, index_live, _html} = live(conn, ~p"/posts")
+
+      # Should not see edit button for other user's post
+      refute has_element?(index_live, "#posts_collection-#{other_posts.id} a[href*='edit']")
+    end
+
+    test "cannot delete another user's post", %{conn: conn} do
+      # Create a post by another user
+      other_user = Chirp.AccountsFixtures.user_fixture(email: "other@example.com")
+      other_posts = posts_fixture(%{user_id: other_user.id})
+
+      {:ok, index_live, _html} = live(conn, ~p"/posts")
+
+      # Should not see delete button for other user's post
+      refute has_element?(index_live, "#delete-#{other_posts.id}")
+    end
+
+    test "attempting to delete another user's post via direct event fails", %{conn: conn} do
+      # Create a post by another user
+      other_user = Chirp.AccountsFixtures.user_fixture(email: "other@example.com")
+      other_posts = posts_fixture(%{user_id: other_user.id})
+
+      {:ok, index_live, _html} = live(conn, ~p"/posts")
+
+      # Try to delete another user's post directly by sending the event
+      render_hook(index_live, "delete", %{"id" => other_posts.id})
+
+      # The post should still be visible (not deleted)
+      assert has_element?(index_live, "#posts_collection-#{other_posts.id}")
+    end
+
     test "likes a post", %{conn: conn, posts: posts} do
       {:ok, index_live, _html} = live(conn, ~p"/posts")
 
@@ -106,7 +149,7 @@ defmodule ChirpWeb.PostsLiveTest do
   end
 
   describe "Show" do
-    setup [:create_posts, :register_and_log_in_user]
+    setup [:register_and_log_in_user, :create_posts]
 
     test "displays posts", %{conn: conn, posts: posts} do
       {:ok, _show_live, html} = live(conn, ~p"/posts/#{posts}")
@@ -136,6 +179,28 @@ defmodule ChirpWeb.PostsLiveTest do
       html = render(show_live)
       assert html =~ "Posts updated successfully"
       assert html =~ "some updated body"
+    end
+
+    test "cannot see edit button for another user's post", %{conn: conn} do
+      # Create a post by another user
+      other_user = Chirp.AccountsFixtures.user_fixture(email: "other@example.com")
+      other_posts = posts_fixture(%{user_id: other_user.id})
+
+      {:ok, show_live, _html} = live(conn, ~p"/posts/#{other_posts}")
+
+      # Should not see edit button for other user's post
+      refute has_element?(show_live, "a", "Edit posts")
+    end
+
+    test "cannot access edit page for another user's post", %{conn: conn} do
+      # Create a post by another user
+      other_user = Chirp.AccountsFixtures.user_fixture(email: "other@example.com")
+      other_posts = posts_fixture(%{user_id: other_user.id})
+
+      # Trying to access edit page should raise an error
+      assert_raise Ecto.NoResultsError, fn ->
+        live(conn, ~p"/posts/#{other_posts}/show/edit")
+      end
     end
   end
 end

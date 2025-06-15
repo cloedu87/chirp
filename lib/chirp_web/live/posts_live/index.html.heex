@@ -9,7 +9,12 @@
 
 <div id="posts" phx-update="stream" class="flex flex-col space-y-4 max-w-2xl mx-auto py-4">
   <%= for {id, post} <- @streams.posts_collection do %>
-    <.live_component module={ChirpWeb.PostsLive.PostComponent} id={id} post={post} />
+    <.live_component
+      module={ChirpWeb.PostsLive.PostComponent}
+      id={id}
+      post={post}
+      current_user={@current_user}
+    />
   <% end %>
 </div>
 
