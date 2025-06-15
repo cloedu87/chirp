@@ -17,7 +17,7 @@ defmodule ChirpWeb.PostsLive.PostComponent do
           <!-- Header -->
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-gray-900">{@post.user.email}</span>
+              <span class="font-bold text-gray-900">@{@post.user.username}</span>
               <span class="text-gray-500 text-sm">
                 {Calendar.strftime(@post.inserted_at, "%B %d, %Y at %I:%M %p")}
               </span>

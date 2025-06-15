@@ -4,6 +4,7 @@ defmodule Chirp.Accounts.User do
 
   schema "users" do
     field :email, :string
+    field :username, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
@@ -38,12 +39,11 @@ defmodule Chirp.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :username, :password])
     |> validate_email(opts)
+    |> validate_username(opts)
     |> validate_password(opts)
   end
-
-
 
   defp validate_email(changeset, opts) do
     changeset
@@ -51,6 +51,18 @@ defmodule Chirp.Accounts.User do
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
     |> maybe_validate_unique_email(opts)
+  end
+
+  defp validate_username(changeset, opts) do
+    changeset
+    |> validate_required([:username])
+    |> validate_length(:username, min: 3, max: 30)
+    |> validate_format(:username, ~r/^[a-zA-Z0-9_]+$/,
+      message: "can only contain letters, numbers, and underscores"
+    )
+    |> validate_format(:username, ~r/^[a-zA-Z0-9]/, message: "must start with a letter or number")
+    |> validate_format(:username, ~r/[a-zA-Z0-9]$/, message: "must end with a letter or number")
+    |> maybe_validate_unique_username(opts)
   end
 
   defp validate_password(changeset, opts) do
@@ -86,6 +98,18 @@ defmodule Chirp.Accounts.User do
       changeset
       |> unsafe_validate_unique(:email, Chirp.Repo)
       |> unique_constraint(:email)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_validate_unique_username(changeset, opts) do
+    validate_username? = Keyword.get(opts, :validate_username, true)
+
+    if validate_username? do
+      changeset
+      |> unsafe_validate_unique(:username, Chirp.Repo)
+      |> unique_constraint(:username)
     else
       changeset
     end
@@ -148,8 +172,6 @@ defmodule Chirp.Accounts.User do
     Bcrypt.no_user_verify()
     false
   end
-
-
 
   @doc """
   Validates the current password otherwise adds an error to the changeset.

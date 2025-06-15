@@ -9,6 +9,7 @@ defmodule ChirpWeb.UserRegistrationLiveTest do
       {:ok, _lv, html} = live(conn, ~p"/users/register")
 
       assert html =~ "Register"
+      assert html =~ "Username"
       assert html =~ "Log in"
     end
 
@@ -28,11 +29,65 @@ defmodule ChirpWeb.UserRegistrationLiveTest do
       result =
         lv
         |> element("#registration_form")
-        |> render_change(user: %{"email" => "with spaces", "password" => "too short"})
+        |> render_change(
+          user: %{"username" => "ab", "email" => "with spaces", "password" => "too short"}
+        )
 
       assert result =~ "Register"
+      assert result =~ "should be at least 3 character"
       assert result =~ "must have the @ sign and no spaces"
       assert result =~ "should be at least 12 character"
+    end
+
+    test "renders errors for invalid username format", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
+
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(
+          user: %{
+            "username" => "invalid-username!",
+            "email" => "test@email.com",
+            "password" => "valid_password123"
+          }
+        )
+
+      assert result =~ "can only contain letters, numbers, and underscores"
+    end
+
+    test "renders errors for username starting with underscore", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
+
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(
+          user: %{
+            "username" => "_invalid",
+            "email" => "test@email.com",
+            "password" => "valid_password123"
+          }
+        )
+
+      assert result =~ "must start with a letter or number"
+    end
+
+    test "renders errors for username ending with underscore", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
+
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(
+          user: %{
+            "username" => "invalid_",
+            "email" => "test@email.com",
+            "password" => "valid_password123"
+          }
+        )
+
+      assert result =~ "must end with a letter or number"
     end
   end
 
@@ -41,7 +96,13 @@ defmodule ChirpWeb.UserRegistrationLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
       email = unique_user_email()
-      form = form(lv, "#registration_form", user: valid_user_attributes(email: email))
+      username = unique_user_username()
+
+      form =
+        form(lv, "#registration_form",
+          user: valid_user_attributes(email: email, username: username)
+        )
+
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 
@@ -58,12 +119,31 @@ defmodule ChirpWeb.UserRegistrationLiveTest do
     test "renders errors for duplicated email", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
-      user = user_fixture(%{email: "test@email.com"})
+      user = user_fixture(%{email: "test@email.com", username: "testuser"})
 
       result =
         lv
         |> form("#registration_form",
-          user: %{"email" => user.email, "password" => "valid_password"}
+          user: %{"username" => "newuser", "email" => user.email, "password" => "valid_password"}
+        )
+        |> render_submit()
+
+      assert result =~ "has already been taken"
+    end
+
+    test "renders errors for duplicated username", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
+
+      user = user_fixture(%{email: "test@email.com", username: "testuser"})
+
+      result =
+        lv
+        |> form("#registration_form",
+          user: %{
+            "username" => user.username,
+            "email" => "newemail@test.com",
+            "password" => "valid_password"
+          }
         )
         |> render_submit()
 

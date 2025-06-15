@@ -14,6 +14,8 @@ defmodule ChirpWeb.UserSettingsLiveTest do
 
       assert html =~ "Change Email"
       assert html =~ "Change Password"
+      refute html =~ "Username"
+      refute html =~ "Change Username"
     end
 
     test "redirects if user is not logged in", %{conn: conn} do

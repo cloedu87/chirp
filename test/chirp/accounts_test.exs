@@ -17,6 +17,17 @@ defmodule Chirp.AccountsTest do
     end
   end
 
+  describe "get_user_by_username/1" do
+    test "does not return the user if the username does not exist" do
+      refute Accounts.get_user_by_username("nonexistent_user")
+    end
+
+    test "returns the user if the username exists" do
+      %{id: id} = user = user_fixture()
+      assert %User{id: ^id} = Accounts.get_user_by_username(user.username)
+    end
+  end
+
   describe "get_user_by_email_and_password/2" do
     test "does not return the user if the email does not exist" do
       refute Accounts.get_user_by_email_and_password("unknown@example.com", "hello world!")
@@ -48,48 +59,115 @@ defmodule Chirp.AccountsTest do
     end
   end
 
-
-
   describe "register_user/1" do
-    test "requires email and password to be set" do
+    test "requires email, username and password to be set" do
       {:error, changeset} = Accounts.register_user(%{})
 
       assert %{
                password: ["can't be blank"],
-               email: ["can't be blank"]
+               email: ["can't be blank"],
+               username: ["can't be blank"]
              } = errors_on(changeset)
     end
 
-    test "validates email and password when given" do
-      {:error, changeset} = Accounts.register_user(%{email: "not valid", password: "not valid"})
+    test "validates email, username and password when given" do
+      {:error, changeset} =
+        Accounts.register_user(%{email: "not valid", username: "ab", password: "not valid"})
 
       assert %{
                email: ["must have the @ sign and no spaces"],
+               username: ["should be at least 3 character(s)"],
                password: ["should be at least 12 character(s)"]
              } = errors_on(changeset)
     end
 
-    test "validates maximum values for email and password for security" do
+    test "validates username format" do
+      {:error, changeset} =
+        Accounts.register_user(%{
+          email: "test@example.com",
+          username: "invalid-username!",
+          password: "valid_password123"
+        })
+
+      assert "can only contain letters, numbers, and underscores" in errors_on(changeset).username
+    end
+
+    test "validates username start and end characters" do
+      {:error, changeset} =
+        Accounts.register_user(%{
+          email: "test@example.com",
+          username: "_invalid_",
+          password: "valid_password123"
+        })
+
+      assert "must start with a letter or number" in errors_on(changeset).username
+      assert "must end with a letter or number" in errors_on(changeset).username
+    end
+
+    test "validates maximum values for email, username and password for security" do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register_user(%{email: too_long, password: too_long})
+
+      {:error, changeset} =
+        Accounts.register_user(%{email: too_long, username: too_long, password: too_long})
+
       assert "should be at most 160 character(s)" in errors_on(changeset).email
+      assert "should be at most 30 character(s)" in errors_on(changeset).username
       assert "should be at most 72 character(s)" in errors_on(changeset).password
     end
 
     test "validates email uniqueness" do
       %{email: email} = user_fixture()
-      {:error, changeset} = Accounts.register_user(%{email: email})
+
+      {:error, changeset} =
+        Accounts.register_user(%{
+          email: email,
+          username: "newuser",
+          password: "valid_password123"
+        })
+
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      {:error, changeset} = Accounts.register_user(%{email: String.upcase(email)})
+      {:error, changeset} =
+        Accounts.register_user(%{
+          email: String.upcase(email),
+          username: "newuser2",
+          password: "valid_password123"
+        })
+
       assert "has already been taken" in errors_on(changeset).email
+    end
+
+    test "validates username uniqueness" do
+      %{username: username} = user_fixture()
+
+      {:error, changeset} =
+        Accounts.register_user(%{
+          email: "new@example.com",
+          username: username,
+          password: "valid_password123"
+        })
+
+      assert "has already been taken" in errors_on(changeset).username
+
+      # Username should be case sensitive
+      {:ok, _user} =
+        Accounts.register_user(%{
+          email: "new2@example.com",
+          username: String.upcase(username),
+          password: "valid_password123"
+        })
     end
 
     test "registers users with a hashed password" do
       email = unique_user_email()
-      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email))
+      username = unique_user_username()
+
+      {:ok, user} =
+        Accounts.register_user(valid_user_attributes(email: email, username: username))
+
       assert user.email == email
+      assert user.username == username
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
@@ -99,21 +177,23 @@ defmodule Chirp.AccountsTest do
   describe "change_user_registration/2" do
     test "returns a changeset" do
       assert %Ecto.Changeset{} = changeset = Accounts.change_user_registration(%User{})
-      assert changeset.required == [:password, :email]
+      assert changeset.required == [:password, :username, :email]
     end
 
     test "allows fields to be set" do
       email = unique_user_email()
+      username = unique_user_username()
       password = valid_user_password()
 
       changeset =
         Accounts.change_user_registration(
           %User{},
-          valid_user_attributes(email: email, password: password)
+          valid_user_attributes(email: email, username: username, password: password)
         )
 
       assert changeset.valid?
       assert get_change(changeset, :email) == email
+      assert get_change(changeset, :username) == username
       assert get_change(changeset, :password) == password
       assert is_nil(get_change(changeset, :hashed_password))
     end

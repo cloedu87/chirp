@@ -27,6 +27,22 @@ defmodule Chirp.Accounts do
   end
 
   @doc """
+  Gets a user by username.
+
+  ## Examples
+
+      iex> get_user_by_username("john_doe")
+      %User{}
+
+      iex> get_user_by_username("unknown_user")
+      nil
+
+  """
+  def get_user_by_username(username) when is_binary(username) do
+    Repo.get_by(User, username: username)
+  end
+
+  @doc """
   Gets a user by email and password.
 
   ## Examples
@@ -90,7 +106,11 @@ defmodule Chirp.Accounts do
 
   """
   def change_user_registration(%User{} = user, attrs \\ %{}) do
-    User.registration_changeset(user, attrs, hash_password: false, validate_email: false)
+    User.registration_changeset(user, attrs,
+      hash_password: false,
+      validate_email: false,
+      validate_username: false
+    )
   end
 
   ## Settings
