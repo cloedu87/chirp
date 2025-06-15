@@ -8,6 +8,10 @@ defmodule Chirp.Accounts.User do
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
+    field :provider, :string
+    field :provider_id, :string
+    field :avatar_url, :string
+    field :name, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -42,6 +46,38 @@ defmodule Chirp.Accounts.User do
     |> validate_password(opts)
   end
 
+  @doc """
+  A user changeset for OAuth registration.
+
+  OAuth users don't need passwords and may not have email validation
+  since the OAuth provider has already verified the email.
+  """
+  def oauth_registration_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:email, :provider, :provider_id, :avatar_url, :name])
+    |> validate_required([:email, :provider, :provider_id])
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
+    |> validate_length(:email, max: 160)
+    |> unsafe_validate_unique(:email, Chirp.Repo)
+    |> unique_constraint(:email)
+    |> unique_constraint([:provider, :provider_id])
+    |> put_change(:confirmed_at, DateTime.utc_now() |> DateTime.truncate(:second))
+  end
+
+  @doc """
+  A user changeset for linking OAuth account to existing user.
+
+  This changeset is used when linking an OAuth provider to an existing user account.
+  It doesn't validate email uniqueness since we're updating an existing user.
+  """
+  def oauth_link_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:provider, :provider_id, :avatar_url, :name])
+    |> validate_required([:provider, :provider_id])
+    |> unique_constraint([:provider, :provider_id])
+    |> put_change(:confirmed_at, DateTime.utc_now() |> DateTime.truncate(:second))
+  end
+
   defp validate_email(changeset, opts) do
     changeset
     |> validate_required([:email])
@@ -51,14 +87,19 @@ defmodule Chirp.Accounts.User do
   end
 
   defp validate_password(changeset, opts) do
-    changeset
-    |> validate_required([:password])
-    |> validate_length(:password, min: 12, max: 72)
-    # Examples of additional password validation:
-    # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
-    # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
-    # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
-    |> maybe_hash_password(opts)
+    # Only validate password if it's being set (not for OAuth users)
+    if get_field(changeset, :provider) do
+      changeset
+    else
+      changeset
+      |> validate_required([:password])
+      |> validate_length(:password, min: 12, max: 72)
+      # Examples of additional password validation:
+      # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
+      # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
+      # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
+      |> maybe_hash_password(opts)
+    end
   end
 
   defp maybe_hash_password(changeset, opts) do
@@ -145,6 +186,12 @@ defmodule Chirp.Accounts.User do
     Bcrypt.no_user_verify()
     false
   end
+
+  @doc """
+  Checks if the user is an OAuth user (has a provider).
+  """
+  def oauth_user?(%Chirp.Accounts.User{provider: provider}) when is_binary(provider), do: true
+  def oauth_user?(_), do: false
 
   @doc """
   Validates the current password otherwise adds an error to the changeset.

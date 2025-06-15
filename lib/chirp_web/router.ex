@@ -68,6 +68,15 @@ defmodule ChirpWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
+  ## OAuth routes
+
+  scope "/auth", ChirpWeb.Auth do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    get "/:provider", OAuthController, :request
+    get "/:provider/callback", OAuthController, :callback
+  end
+
   scope "/", ChirpWeb do
     pipe_through [:browser, :require_authenticated_user]
 

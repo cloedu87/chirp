@@ -48,6 +48,125 @@ defmodule Chirp.AccountsTest do
     end
   end
 
+  describe "get_user_by_provider/2" do
+    test "does not return the user if the provider/provider_id combination does not exist" do
+      refute Accounts.get_user_by_provider("google", "123456")
+    end
+
+    test "returns the user if the provider/provider_id combination exists" do
+      user = oauth_user_fixture()
+      assert %User{} = Accounts.get_user_by_provider(user.provider, user.provider_id)
+    end
+  end
+
+  describe "register_oauth_user/1" do
+    test "registers oauth user with valid data" do
+      oauth_attrs = %{
+        email: "test@example.com",
+        provider: "google",
+        provider_id: "123456",
+        name: "John Doe",
+        avatar_url: "https://example.com/avatar.jpg"
+      }
+
+      assert {:ok, %User{} = user} = Accounts.register_oauth_user(oauth_attrs)
+      assert user.email == "test@example.com"
+      assert user.provider == "google"
+      assert user.provider_id == "123456"
+      assert user.name == "John Doe"
+      assert user.avatar_url == "https://example.com/avatar.jpg"
+      assert user.confirmed_at
+      assert is_nil(user.hashed_password)
+    end
+
+    test "requires email, provider, and provider_id" do
+      assert {:error, changeset} = Accounts.register_oauth_user(%{})
+      assert "can't be blank" in errors_on(changeset).email
+      assert "can't be blank" in errors_on(changeset).provider
+      assert "can't be blank" in errors_on(changeset).provider_id
+    end
+
+    test "validates email format" do
+      oauth_attrs = %{
+        email: "invalid-email",
+        provider: "google",
+        provider_id: "123456"
+      }
+
+      assert {:error, changeset} = Accounts.register_oauth_user(oauth_attrs)
+      assert "must have the @ sign and no spaces" in errors_on(changeset).email
+    end
+  end
+
+  describe "find_or_create_oauth_user/1" do
+    test "returns existing user by provider and provider_id" do
+      existing_user = oauth_user_fixture()
+
+      oauth_attrs = %{
+        email: existing_user.email,
+        provider: existing_user.provider,
+        provider_id: existing_user.provider_id
+      }
+
+      assert {:ok, %User{id: id}} = Accounts.find_or_create_oauth_user(oauth_attrs)
+      assert id == existing_user.id
+    end
+
+    test "links oauth account to existing user by email" do
+      existing_user = user_fixture()
+
+      oauth_attrs = %{
+        email: existing_user.email,
+        provider: "google",
+        provider_id: "123456",
+        name: "John Doe"
+      }
+
+      assert {:ok, %User{id: id}} = Accounts.find_or_create_oauth_user(oauth_attrs)
+      assert id == existing_user.id
+
+      # Verify the user was updated with OAuth info
+      updated_user = Accounts.get_user!(id)
+      assert updated_user.provider == "google"
+      assert updated_user.provider_id == "123456"
+      assert updated_user.name == "John Doe"
+    end
+
+    test "creates new user if no existing user found" do
+      oauth_attrs = %{
+        email: "newuser@example.com",
+        provider: "github",
+        provider_id: "789012",
+        name: "Jane Doe"
+      }
+
+      assert {:ok, %User{} = user} = Accounts.find_or_create_oauth_user(oauth_attrs)
+      assert user.email == "newuser@example.com"
+      assert user.provider == "github"
+      assert user.provider_id == "789012"
+      assert user.name == "Jane Doe"
+    end
+  end
+
+  describe "link_oauth_account/2" do
+    test "links oauth account to existing user" do
+      user = user_fixture()
+
+      oauth_attrs = %{
+        provider: "google",
+        provider_id: "123456",
+        name: "John Doe",
+        avatar_url: "https://example.com/avatar.jpg"
+      }
+
+      assert {:ok, %User{} = updated_user} = Accounts.link_oauth_account(user, oauth_attrs)
+      assert updated_user.provider == "google"
+      assert updated_user.provider_id == "123456"
+      assert updated_user.name == "John Doe"
+      assert updated_user.avatar_url == "https://example.com/avatar.jpg"
+    end
+  end
+
   describe "register_user/1" do
     test "requires email and password to be set" do
       {:error, changeset} = Accounts.register_user(%{})

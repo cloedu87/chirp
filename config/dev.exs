@@ -83,3 +83,13 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# OAuth configuration for development
+# These are placeholder values - replace with your actual OAuth app credentials
+config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+  client_id: System.get_env("GOOGLE_CLIENT_ID") || "your-google-client-id",
+  client_secret: System.get_env("GOOGLE_CLIENT_SECRET") || "your-google-client-secret"
+
+config :ueberauth, Ueberauth.Strategy.Github.OAuth,
+  client_id: System.get_env("GITHUB_CLIENT_ID") || "your-github-client-id",
+  client_secret: System.get_env("GITHUB_CLIENT_SECRET") || "your-github-client-secret"
