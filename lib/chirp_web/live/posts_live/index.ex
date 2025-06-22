@@ -9,7 +9,7 @@ defmodule ChirpWeb.PostsLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Timeline.subscribe()
+    # if connected?(socket), do: Timeline.subscribe()
     {:ok, stream(socket, :posts_collection, Timeline.list_posts() |> Enum.reverse(), limit: 10)}
   end
 
@@ -58,18 +58,18 @@ defmodule ChirpWeb.PostsLive.Index do
     {:noreply, stream_delete(socket, :posts_collection, post)}
   end
 
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    posts = Timeline.get_posts!(id)
+  # @impl true
+  # def handle_event("delete", %{"id" => id}, socket) do
+  #   posts = Timeline.get_posts!(id)
 
-    case Timeline.delete_user_post(socket.assigns.current_user, posts) do
-      {:ok, _} ->
-        {:noreply, stream_delete(socket, :posts_collection, posts)}
+  #   case Timeline.delete_user_post(socket.assigns.current_user, posts) do
+  #     {:ok, _} ->
+  #       {:noreply, stream_delete(socket, :posts_collection, posts)}
 
-      {:error, :unauthorized} ->
-        {:noreply, put_flash(socket, :error, "You can only delete your own posts.")}
-    end
-  end
+  #     {:error, :unauthorized} ->
+  #       {:noreply, put_flash(socket, :error, "You can only delete your own posts.")}
+  #   end
+  # end
 
   @impl true
   def handle_event("like", %{"id" => id}, socket) do

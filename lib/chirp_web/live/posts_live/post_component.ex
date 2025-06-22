@@ -17,7 +17,7 @@ defmodule ChirpWeb.PostsLive.PostComponent do
           <!-- Header -->
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-gray-900">@{@post.user.username}</span>
+              <span class="font-bold text-gray-900">{@post.user.email}</span>
               <span class="text-gray-500 text-sm">
                 {Calendar.strftime(@post.inserted_at, "%B %d, %Y at %I:%M %p")}
               </span>
@@ -41,7 +41,7 @@ defmodule ChirpWeb.PostsLive.PostComponent do
                     />
                   </svg>
                 </.link>
-                <.link
+                <!--.link
                   phx-click={JS.push("delete", value: %{id: @post.id}) |> hide("##{@id}")}
                   id={"delete-#{@post.id}"}
                   data-confirm="Are you sure?"
@@ -61,7 +61,7 @@ defmodule ChirpWeb.PostsLive.PostComponent do
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
-                </.link>
+                </.link -->
               </div>
             <% end %>
           </div>
