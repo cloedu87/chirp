@@ -111,9 +111,9 @@ defmodule Chirp.Timeline do
     Posts.changeset(posts, attrs)
   end
 
-  # def subscribe do
-  #   Phoenix.PubSub.subscribe(Chirp.PubSub, "posts")
-  # end
+  def subscribe do
+    Phoenix.PubSub.subscribe(Chirp.PubSub, "posts")
+  end
 
   def broadcast({:error, _reason} = error, _event), do: error
 
