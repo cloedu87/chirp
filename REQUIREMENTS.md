@@ -14,6 +14,12 @@ Erstelle eine ungefähre, schematische Zeichnung deiner App und deren Funktionen
 über jedem post wird aktuell die mail adresse angezeigt, es sollte jedoch der username mit einem '@' als prefix dargestellt werden. z.B. '@user1'
 stichwörter: user.ex, user, email, username
 
+### Passwort validierung
+Passwort muss mindestens 14 Zeichen lang sein.
+Stichwörter: password, validation
+
+### Avatar einblenden
+Avatar soll eingeblendet werden. Erster buchstabe der Maildresse soll als "Bi
 ### Löschen von bestehenden Posts
 es soll ein Icon zum löschen neben jenem zum ändern von posts dargestellt werden, beim Klick soll der post gelöscht werden.
 stichwörter: delete, edit, handle_event
