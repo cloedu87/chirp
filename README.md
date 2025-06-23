@@ -2,6 +2,13 @@
 
 A Twitter clone built with Elixir and the Phoenix Framework.
 
+## What we use
+
+- [Elixir](https://elixir-lang.org/)
+- [Learn Elixir](https://joyofelixir.com/)
+- [Phoenix Framework](https://www.phoenixframework.org/)
+- [PostgreSQL](https://www.postgresql.org/)
+
 ## Features
 
 - User authentication with email/password

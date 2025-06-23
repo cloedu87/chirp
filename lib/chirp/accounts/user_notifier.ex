@@ -1,20 +1,38 @@
 defmodule Chirp.Accounts.UserNotifier do
-  import Swoosh.Email
+  # import Swoosh.Email
 
-  alias Chirp.Mailer
+  # alias Chirp.Mailer
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
-    email =
-      new()
-      |> to(recipient)
-      |> from({"Chirp", "contact@example.com"})
-      |> subject(subject)
-      |> text_body(body)
+    # we don't send mails at the moment
+    # email =
+    #   new()
+    #   |> to(recipient)
+    #   |> from({"Chirp", "contact@example.com"})
+    #   |> subject(subject)
+    #   |> text_body(body)
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
-    end
+    # with {:ok, _metadata} <- Mailer.deliver(email) do
+    #   {:ok, email}
+    # end
+
+    {:ok,
+     %{
+       subject: subject,
+       from: {"Chirp", "contact@example.com"},
+       to: recipient,
+       cc: [],
+       bcc: [],
+       text_body: body,
+       html_body: "",
+       attachments: [],
+       reply_to: "contact@example.com",
+       headers: %{},
+       private: %{},
+       assigns: %{},
+       provider_options: %{}
+     }}
   end
 
   @doc """
